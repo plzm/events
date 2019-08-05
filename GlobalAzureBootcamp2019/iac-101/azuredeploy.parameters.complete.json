@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "eastus"
+        },
+        "resourceGroupName": {
+            "value": "gab19"
+        },
+        "virtualMachineName": {
+            "value": "gab19-vm"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_B1s"
+        },
+        "publisher": {
+            "value": "MicrosoftWindowsServer"
+        },
+        "offer": {
+            "value": "WindowsServer"
+        },
+        "sku": {
+            "value": "2019-Datacenter"
+        },
+        "version": {
+            "value": "latest"
+        },
+        "licenseType": {
+            "value": "Windows_Server"
+        },
+        "adminUsername": {
+            "value": "gab19-admin"
+        },
+        "adminPassword": {
+            "value": "G33k1ngOutGood!!"
+        },
+        "osDiskStorageType": {
+            "value": "Premium_LRS"
+        },
+        "osDiskSizeInGB": {
+            "value": 128
+        },
+        "publicIpAddressType": {
+            "value": "Dynamic"
+        },
+        "publicIpAddressSku": {
+            "value": "Basic"
+        },
+        "virtualNetworkName": {
+            "value": "gab19-vnet"
+        },
+        "virtualNetworkAddressSpace": {
+            "value": "192.168.0.0/16"
+        },
+        "subnetName": {
+            "value": "subnet1"
+        },
+        "subnetAddressSpace": {
+            "value": "192.168.1.0/24"
+        },
+        "networkSecurityGroupName": {
+            "value": "gab19-nsg"
+        },
+        "networkSecurityGroupRule_Name": {
+            "value": "rule1-allow-me"
+        },
+        "networkSecurityGroupRule_Source": {
+            "value": "75.68.30.173"
+        },
+        "networkSecurityGroupRule_Priority": {
+            "value": 100
+        },
+        "vmTimeZone": {
+            "value": "Eastern Standard Time"
+        }
+    }
+}

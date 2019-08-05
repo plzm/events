@@ -1,0 +1,708 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"subscriptionId": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Azure subscription ID",
+				"description": "An existing, valid Azure subscription ID."
+			}
+		},
+		"location": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "The Azure region within which to deploy. Examples: 'East US', 'West US', and so on. See https://azure.microsoft.com/regions/."
+			}
+		},
+		"availabilitySetName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Availability set",
+				"description": "A managed availability set to which to join the VM. If the availability set does not yet exist, it will be created."
+			}
+		},
+		"resourceGroupNameVM": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Resource Group for VM",
+				"description": "The resource group name that should contain the VM and its related resources, such as NIC and public IP."
+			}
+		},
+		"virtualMachineName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Virtual Machine name",
+				"description": "The VM name. Should be unique within the resource group."
+			}
+		},
+		"virtualMachineSize": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Virtual Machine size",
+				"description": "The VM size. See https://docs.microsoft.com/azure/virtual-machines/windows/sizes or use Azure CLI command 'az vm list-sizes'."
+			}
+		},
+		"publisher": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Publisher",
+				"description": "CLI: az vm image list-publishers -l [Azure region]. For Windows 10, use MicrosoftWindowsDesktop"
+			}
+		},
+		"offer": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Offer",
+				"description": "CLI: az vm image list-offers -l [Azure region] --publisher [Publisher]. For Windows 10, use Windows-10"
+			}
+		},
+		"sku": {
+			"type": "string",
+			"metadata": {
+				"displayName": "SKU",
+				"description": "CLI: az vm image list-skus -l [Azure region] --publisher [Publisher] --offer [Offer]. For Windows 10 1709, use RS3-Pro"
+			}
+		},
+		"version": {
+			"type": "string",
+			"defaultValue": "latest",
+			"metadata": {
+				"displayName": "Version",
+				"description": "Image version. Typically use latest."
+			}
+		},
+		"licenseType": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "License Type",
+				"description": "For Windows 10, use Windows_Client"
+			}
+		},
+		"adminUsername": {
+			"type": "string",
+			"metadata": {
+				"displayName": "VM administrator username",
+				"description": "VM administrator username"
+			}
+		},
+		"adminPassword": {
+			"type": "securestring",
+			"metadata": {
+				"displayName": "VM administrator password",
+				"description": "VM administrator password"
+			}
+		},
+		"osDiskStorageType": {
+			"type": "string",
+			"allowedValues": [
+				"Standard_LRS",
+				"Premium_LRS"
+			],
+			"defaultValue": "Premium_LRS",
+			"metadata": {
+				"displayName": "OS disk storage type",
+				"description": "OS disk storage type. Standard_LRS uses HDD storage, Premium_LRS uses SSD storage"
+			}
+		},
+		"osDiskSizeInGB": {
+			"type": "int",
+			"defaultValue": 129,
+			"minValue": 32,
+			"maxValue": 1023,
+			"metadata": {
+				"displayName": "OS disk size",
+				"description": "OS disk size in GB"
+			}
+		},
+		"dataDiskStorageType": {
+			"type": "string",
+			"allowedValues": [
+				"Standard_LRS",
+				"Premium_LRS"
+			],
+			"defaultValue": "Premium_LRS",
+			"metadata": {
+				"displayName": "Data disk storage type",
+				"description": "Data disk storage type. Standard_LRS uses HDD storage, Premium_LRS uses SSD storage"
+			}
+		},
+		"dataDiskCount": {
+			"type": "int",
+			"defaultValue": 1,
+			"metadata": {
+				"displayName": "Number of data disks",
+				"description": "Number of data disks to attach to the VM. At this writing, ARM template language requires an integer 1-800; less then or equal to 0 (zero) is not allowed."
+			}
+		},
+		"dataDiskSizeInGB": {
+			"type": "int",
+			"defaultValue": 257,
+			"minValue": 32,
+			"maxValue": 1023,
+			"metadata": {
+				"displayName": "Data disk size",
+				"description": "Data disk size in DB. Each data disk will be created at this size"
+			}
+		},
+		"publicIpAddressType": {
+			"type": "string",
+			"allowedValues": [
+				"Dynamic",
+				"Static"
+			],
+			"defaultValue": "Dynamic",
+			"metadata": {
+				"displayName": "Public IP address type",
+				"description": "The public IP address type: Static or Dynamic."
+			}
+		},
+		"publicIpAddressSku": {
+			"type": "string",
+			"allowedValues": [
+				"Basic",
+				"Standard"
+			],
+			"defaultValue": "Basic",
+			"metadata": {
+				"displayName": "Public IP address SKU",
+				"description": "The public IP address SKU to use. See https://docs.microsoft.com/azure/virtual-network/virtual-network-ip-addresses-overview-arm"
+			}
+		},
+		"resourceGroupNameNetwork": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Resource Group for networking resources",
+				"description": "The Resource Group that contains the VNet, subnet, and NSG to use. Can be the same as the Resource Group where the VM will be deployed, or can refer to a separate Resource Group which contains durable networking resources."
+			}
+		},
+		"virtualNetworkName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "VNet",
+				"description": "Virtual network into which to deploy the VM"
+			}
+		},
+		"subnetName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Subnet",
+				"description": "Subnet into which to deploy the VM"
+			}
+		},
+		"resourceGroupNameDiagnostics": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Resource Group for VM diagnostics",
+				"description": "The Resource Group that contains the standard storage account to which VM diagnostic data will be written. Can be the same as the Resource Group where the VM will be deployed, or can refer to a separate Resource Group which contains durable and/or centralized diagnostics resources."
+			}
+		},
+		"diagnosticsStorageAccountName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Storage Account for VM diagnostics",
+				"description": "The standard storage account to which VM diagnostics data will be written."
+			}
+		},
+		"vmTimeZone": {
+			"type": "string",
+			"defaultValue": "UTC",
+			"minLength": 2,
+			"metadata": {
+				"description": "Time zone of the VMs. Type '[TimeZoneInfo]::GetSystemTimeZones().Id' in PowerShell to get the list. Note that 'UTC' works but 'UTC+xx' does NOT work."
+			}
+		},
+		"vmAutoShutdownTime": {
+			"type": "string",
+			"defaultValue": "9999",
+			"minLength": 4,
+			"maxLength": 4,
+			"metadata": {
+				"description": "The time at which VMs will be automatically shutdown (24h HHmm format). Set value to '9999' to NOT configure the auto shutdown."
+			}
+		},
+		"enableAutoShutdownNotification": {
+			"type": "string",
+			"defaultValue": "Enabled",
+			"allowedValues": [
+				"Enabled",
+				"Disabled"
+			],
+			"metadata": {
+				"displayName": "Enable Auto-shutdown Notification?",
+				"description": "Specify whether a notification should be sent before VM auto-shutdown."
+			}
+		},
+		"autoShutdownNotificationWebhookURL": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Auto-shutdown Notification Webhook URL",
+				"description": "Auto-shutdown Notification Webhook URL"
+			}
+		},
+		"autoShutdownNotificationMinutesBefore": {
+			"type": "int",
+			"defaultValue": 15,
+			"metadata": {
+				"displayName": "Auto-shutdown Notification minutes in advance",
+				"description": "Auto-shutdown Notification minutes in advance"
+			}
+		}
+	},
+	"variables": {
+		"vnetId": "[resourceId(parameters('resourceGroupNameNetwork'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+		"subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
+		"diagnosticsStorageAccountId": "[concat('/subscriptions/', parameters('subscriptionId'), '/resourceGroups/', parameters('resourceGroupNameDiagnostics'), '/providers/Microsoft.Storage/storageAccounts/', parameters('diagnosticsStorageAccountName'))]",
+		"diagnosticsExtensionName": "IaaSDiagnostics",
+		"osDiskName": "[concat(parameters('virtualMachineName'), '_os')]",
+		"dataDiskNamePrefix": "[concat(parameters('virtualMachineName'), '_data_')]",
+		"networkInterfaceName": "[concat(parameters('virtualMachineName'), '_nic_1')]",
+		"publicIpAddressName": "[concat(parameters('virtualMachineName'), '_pip_1')]",
+        "computeApiVersion": "2017-03-30",
+        "networkApiVersion": "2018-01-01",
+        "storageApiVersion": "2015-06-15",
+        "diagnosticsApiVersion": "2017-05-01-preview"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Compute/availabilitySets",
+			"sku": {
+				"name": "Aligned"
+			},
+			"name": "[parameters('availabilitySetName')]",
+			"apiVersion": "[variables('computeApiVersion')]",
+			"location": "[parameters('location')]",
+			"scale": null,
+			"properties": {
+				"platformUpdateDomainCount": 5,
+				"platformFaultDomainCount": 3,
+				"virtualMachines": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[parameters('virtualMachineName')]",
+			"type": "Microsoft.Compute/virtualMachines",
+			"apiVersion": "[variables('computeApiVersion')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
+			],
+			"properties": {
+				"availabilitySet": {
+					"id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
+				},
+				"osProfile": {
+					"computerName": "[parameters('virtualMachineName')]",
+					"adminUsername": "[parameters('adminUsername')]",
+					"adminPassword": "[parameters('adminPassword')]",
+					"windowsConfiguration": {
+						"provisionVmAgent": "true",
+						"timeZone": "[parameters('vmTimeZone')]"
+					}
+				},
+				"hardwareProfile": {
+					"vmSize": "[parameters('virtualMachineSize')]"
+				},
+				"storageProfile": {
+					"imageReference": {
+						"publisher": "[parameters('publisher')]",
+						"offer": "[parameters('offer')]",
+						"sku": "[parameters('sku')]",
+						"version": "[parameters('version')]"
+					},
+					"osDisk": {
+						"createOption": "FromImage",
+						"name": "[variables('osDiskName')]",
+						"diskSizeGB": "[parameters('osDiskSizeInGB')]",
+						"managedDisk": {
+							"storageAccountType": "[parameters('osDiskStorageType')]"
+						}
+					},
+					"copy": [
+						{
+							"name": "dataDisks",
+							"count": "[parameters('dataDiskCount')]",
+							"input": {
+								"lun": "[copyIndex('dataDisks')]",
+								"createOption": "Empty",
+								"name": "[concat(variables('dataDiskNamePrefix'), copyIndex('dataDisks', 1))]",
+								"diskSizeGB": "[parameters('dataDiskSizeInGB')]",
+								"managedDisk": {
+									"storageAccountType": "[parameters('dataDiskStorageType')]"
+								}
+							}
+						}
+					]
+				},
+				"networkProfile": {
+					"networkInterfaces": [
+						{
+							"id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+						}
+					]
+				},
+				"licenseType": "[parameters('licenseType')]",
+				"diagnosticsProfile": {
+					"bootDiagnostics": {
+						"enabled": true,
+						"storageUri": "[reference(resourceId(parameters('resourceGroupNameDiagnostics'), 'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName')), variables('storageApiVersion')).primaryEndpoints['blob']]"
+					}
+				}
+			},
+			"resources": []
+		},
+		{
+			"name": "[concat(parameters('virtualMachineName'),'IaaSAntimalware')]",
+			"apiVersion": "2018-02-01",
+			"type": "Microsoft.Resources/deployments",
+			"properties": {
+				"mode": "Incremental",
+				"templateLink": {
+					"uri": "https://gallery.azure.com/artifact/20161101/microsoft.antimalware-windows-arm.1.0.0/Artifacts/MainTemplate.json"
+				},
+				"parameters": {
+					"vmName": {
+						"value": "[parameters('virtualMachineName')]"
+					},
+					"location": {
+						"value": "[parameters('location')]"
+					},
+					"RealtimeProtectionEnabled": {
+						"value": "true"
+					},
+					"ScheduledScanSettingsIsEnabled": {
+						"value": "true"
+					},
+					"ScheduledScanSettingsScanType": {
+						"value": "Quick"
+					},
+					"ScheduledScanSettingsDay": {
+						"value": "7"
+					},
+					"ScheduledScanSettingsTime": {
+						"value": "120"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+			]
+		},
+		{
+			"condition": "[not(equals(parameters('vmAutoShutdownTime'), '9999'))]",
+			"type": "Microsoft.DevTestLab/schedules",
+			"name": "[concat('shutdown-computevm-', parameters('virtualMachineName'))]",
+			"apiVersion": "[providers('Microsoft.DevTestLab','labs').apiVersions[0]]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+			],
+			"properties": {
+				"status": "Enabled",
+				"taskType": "ComputeVmShutdownTask",
+				"dailyRecurrence": {
+					"time": "[parameters('vmAutoShutdownTime')]"
+				},
+				"timeZoneId": "[parameters('vmTimeZone')]",
+				"notificationSettings": {
+					"status": "[parameters('enableAutoShutdownNotification')]",
+					"timeInMinutes": "[parameters('autoShutdownNotificationMinutesBefore')]",
+					"webhookUrl": "[parameters('autoShutdownNotificationWebhookURL')]"
+				},
+				"targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachineName'))]"
+			}
+		},
+		{
+			"name": "[concat(parameters('virtualMachineName'),'/', variables('diagnosticsExtensionName'))]",
+			"type": "Microsoft.Compute/virtualMachines/extensions",
+			"apiVersion": "2017-12-01",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+			],
+			"properties": {
+				"publisher": "Microsoft.Azure.Diagnostics",
+				"type": "IaaSDiagnostics",
+				"typeHandlerVersion": "1.5",
+				"autoUpgradeMinorVersion": true,
+				"settings": {
+					"StorageAccount": "[parameters('diagnosticsStorageAccountName')]",
+					"WadCfg": {
+						"DiagnosticMonitorConfiguration": {
+							"overallQuotaInMB": 5120,
+							"Metrics": {
+								"resourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/', 'Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]",
+								"MetricAggregation": [
+									{
+										"scheduledTransferPeriod": "PT1H"
+									},
+									{
+										"scheduledTransferPeriod": "PT1M"
+									}
+								]
+							},
+							"DiagnosticInfrastructureLogs": {
+								"scheduledTransferLogLevelFilter": "Error"
+							},
+							"PerformanceCounters": {
+								"scheduledTransferPeriod": "PT1M",
+								"PerformanceCounterConfiguration": [
+									{
+										"counterSpecifier": "\\Processor Information(_Total)\\% Processor Time",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Processor Information(_Total)\\% Privileged Time",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Processor Information(_Total)\\% User Time",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Processor Information(_Total)\\Processor Frequency",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\System\\Processes",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Process(_Total)\\Thread Count",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Process(_Total)\\Handle Count",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\System\\System Up Time",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\System\\Context Switches/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\System\\Processor Queue Length",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Memory\\% Committed Bytes In Use",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Memory\\Available Bytes",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Memory\\Committed Bytes",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Memory\\Cache Bytes",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Memory\\Pool Paged Bytes",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Memory\\Pool Nonpaged Bytes",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Memory\\Pages/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Memory\\Page Faults/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Process(_Total)\\Working Set",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Process(_Total)\\Working Set - Private",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\% Disk Time",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\% Disk Read Time",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\% Disk Write Time",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\% Idle Time",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Disk Bytes/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Disk Read Bytes/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Disk Write Bytes/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Disk Transfers/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Disk Reads/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Disk Writes/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Avg. Disk sec/Transfer",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Avg. Disk sec/Read",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Avg. Disk sec/Write",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Avg. Disk Queue Length",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Avg. Disk Read Queue Length",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Avg. Disk Write Queue Length",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\% Free Space",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\LogicalDisk(_Total)\\Free Megabytes",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Network Interface(*)\\Bytes Total/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Network Interface(*)\\Bytes Sent/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Network Interface(*)\\Bytes Received/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Network Interface(*)\\Packets/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Network Interface(*)\\Packets Sent/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Network Interface(*)\\Packets Received/sec",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Network Interface(*)\\Packets Outbound Errors",
+										"sampleRate": "PT1M"
+									},
+									{
+										"counterSpecifier": "\\Network Interface(*)\\Packets Received Errors",
+										"sampleRate": "PT1M"
+									}
+								]
+							},
+							"WindowsEventLog": {
+								"scheduledTransferPeriod": "PT1M",
+								"DataSource": [
+									{
+										"name": "Application!*[System[(Level = 1 or Level = 2 or Level = 3)]]"
+									},
+									{
+										"name": "Security!*[System[band(Keywords,4503599627370496)]]"
+									},
+									{
+										"name": "System!*[System[(Level = 1 or Level = 2 or Level = 3)]]"
+									}
+								]
+							}
+						}
+					}
+				},
+				"protectedSettings": {
+					"storageAccountName": "[parameters('diagnosticsStorageAccountName')]",
+					"storageAccountKey": "[listKeys(variables('diagnosticsStorageAccountId'), variables('storageApiVersion')).key1]",
+					"storageAccountEndPoint": "https://core.windows.net/"
+				}
+			}
+		},
+		{
+			"name": "[variables('networkInterfaceName')]",
+			"type": "Microsoft.Network/networkInterfaces",
+			"apiVersion": "[variables('networkApiVersion')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]"
+			],
+			"properties": {
+				"ipConfigurations": [
+					{
+						"name": "ipconfig1",
+						"properties": {
+							"subnet": {
+								"id": "[variables('subnetRef')]"
+							},
+							"privateIPAllocationMethod": "Dynamic",
+							"publicIpAddress": {
+								"id": "[resourceId(parameters('resourceGroupNameVM'), 'Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "[variables('publicIpAddressName')]",
+			"type": "Microsoft.Network/publicIpAddresses",
+			"apiVersion": "[variables('networkApiVersion')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
+			},
+			"sku": {
+				"name": "[parameters('publicIpAddressSku')]"
+			}
+		}
+	],
+	"outputs": {
+		"adminUsername": {
+			"type": "string",
+			"value": "[parameters('adminUsername')]"
+		}
+	}
+}

@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": ""
+        },
+        "resourceGroupName": {
+            "value": ""
+        },
+        "virtualMachineName": {
+            "value": ""
+        },
+        "virtualMachineSize": {
+            "value": ""
+        },
+        "publisher": {
+            "value": ""
+        },
+        "offer": {
+            "value": ""
+        },
+        "sku": {
+            "value": ""
+        },
+        "version": {
+            "value": ""
+        },
+        "licenseType": {
+            "value": ""
+        },
+        "adminUsername": {
+            "value": ""
+        },
+        "adminPassword": {
+            "value": ""
+        },
+        "osDiskStorageType": {
+            "value": ""
+        },
+        "osDiskSizeInGB": {
+            "value": 0
+        },
+        "publicIpAddressType": {
+            "value": ""
+        },
+        "publicIpAddressSku": {
+            "value": ""
+        },
+        "virtualNetworkName": {
+            "value": ""
+        },
+        "virtualNetworkAddressSpace": {
+            "value": ""
+        },
+        "subnetName": {
+            "value": ""
+        },
+        "subnetAddressSpace": {
+            "value": ""
+        },
+        "networkSecurityGroupName": {
+            "value": ""
+        },
+        "networkSecurityGroupRule_Name": {
+            "value": ""
+        },
+        "networkSecurityGroupRule_Source": {
+            "value": ""
+        },
+        "networkSecurityGroupRule_Priority": {
+            "value": 0
+        },
+        "vmTimeZone": {
+            "value": ""
+        }
+    }
+}

@@ -1,0 +1,96 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "subscriptionId": {
+            "value": "[FILL IN]"
+        },
+        "location": {
+            "value": "eastus"
+        },
+        "availabilitySetName": {
+            "value": "gab18-avset"
+        },
+        "resourceGroupNameVM": {
+            "value": "gab18"
+        },
+        "virtualMachineName": {
+            "value": "gab18-sqlvm"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_DS3_v2"
+        },
+        "publisher": {
+            "value": "MicrosoftSQLServer"
+        },
+        "offer": {
+            "value": "SQL2017-WS2016"
+        },
+        "sku": {
+            "value": "SQLDEV"
+        },
+        "version": {
+            "value": "latest"
+        },
+        "licenseType": {
+            "value": "Windows_Server"
+        },
+        "adminUsername": {
+            "value": "vmadmin"
+        },
+        "adminPassword": {
+            "value": "[FILL IN]"
+        },
+        "osDiskStorageType": {
+            "value": "Premium_LRS"
+        },
+        "osDiskSizeInGB": {
+            "value": 129
+        },
+        "dataDiskStorageType": {
+            "value": "Premium_LRS"
+        },
+        "dataDiskCount": {
+            "value": 1
+        },
+        "dataDiskSizeInGB": {
+            "value": 129
+        },
+        "publicIpAddressType": {
+            "value": "Dynamic"
+        },
+        "publicIpAddressSku": {
+            "value": "Basic"
+        },
+        "resourceGroupNameNetwork": {
+            "value": "[FILL IN]"
+        },
+        "virtualNetworkName": {
+            "value": "[FILL IN]"
+        },
+        "subnetName": {
+            "value": "[FILL IN]"
+        },
+        "resourceGroupNameDiagnostics": {
+            "value": "[FILL IN]"
+        },
+        "diagnosticsStorageAccountName": {
+            "value": "[FILL IN]"
+        },
+        "vmTimeZone": {
+            "value": "Eastern Standard Time"
+        },
+        "vmAutoShutdownTime": {
+            "value": "1900"
+        },
+        "enableAutoShutdownNotification": {
+            "value": "Disabled"
+        },
+        "autoShutdownNotificationWebhookURL": {
+            "value": ""
+        },
+        "autoShutdownNotificationMinutesBefore": {
+            "value": 15
+        }
+    }
+}
