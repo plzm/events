@@ -3,7 +3,8 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.EventHubs;
+using Azure.Messaging.EventHubs;
+using Azure.Messaging.EventHubs.Producer;
 using pelazem.rndgen;
 using pelazem.util;
 
@@ -54,9 +55,8 @@ namespace Sender
 			// Creates an EventHubsConnectionStringBuilder object from a the connection string, and sets the EntityPath.
 			// Typically the connection string should have the Entity Path in it, but for the sake of this simple scenario
 			// we are using the connection string from the namespace.
-			var connectionStringBuilder = new EventHubsConnectionStringBuilder(_event_hub_conn_string);
-
-			EventHubClient eventHubClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+			var eventHubConnection = new Azure.Messaging.EventHubs.EventHubConnection(_event_hub_conn_string);
+			EventHubProducerClient eventHubClient = new EventHubProducerClient(eventHubConnection);
 
 			while(_keepRunning)
 			{
@@ -67,7 +67,7 @@ namespace Sender
 					Console.WriteLine(message);
 					Console.WriteLine();
 
-					await eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(message)));
+					await eventHubClient.SendAsync(new[] { new EventData(Encoding.UTF8.GetBytes(message)) });
 				}
 				catch (Exception ex)
 				{
